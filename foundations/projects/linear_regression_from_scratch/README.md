@@ -2,59 +2,50 @@
 
 ## Goal
 
-Implement and train a linear regression model **without scikit-learn**, using gradient descent, and visualize training loss.
+Implement and train a linear regression model **without scikit-learn**, using gradient descent, and visualize the learning process.
 
-This is Week 1 of the Foundations track.
+This is **Week 1 of the Foundations track**.
 
 ---
 
 ## What this includes
 
 - Synthetic dataset generation: `y = 3x + 10 + noise`
-- Linear regression model implemented with a bias term
-- Gradient descent training on Mean Squared Error (MSE)
+- Linear regression model implemented with an explicit bias term
+- Gradient descent optimization using Mean Squared Error (MSE)
+- Closed-form (least squares) solution for comparison
 - Plots:
-  - Data + learned regression line
-  - MSE loss curve over epochs
+  - Data with fitted regression lines
+  - Training loss (MSE) over epochs
 
 ---
 
 ## How it works (high-level)
 
-We model:
+The model assumes a linear relationship:
 
-`y_hat = b + w*x`
+`ŷ = b + w·x`
 
-We minimize Mean Squared Error:
+It learns parameters by minimizing Mean Squared Error:
 
-`MSE = (1/n) * Σ (y_hat - y)^2`
+`MSE = (1/n) · Σ (ŷ − y)²`
 
-Gradient descent iteratively updates parameters:
+Gradient descent updates parameters iteratively:
 
-`theta = theta - lr * gradient`
+`θ ← θ − α · ∇MSE`
 
 Where:
 
-`gradient = (2/n) * X^T * (y_hat - y)`
+`∇MSE = (2/n) · Xᵀ(ŷ − y)`
+
+The model does not “understand” the data — it only receives feedback on how wrong its predictions are and adjusts parameters to reduce that error.
 
 ---
 
-## Run it
+## Running the code
 
 ### Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
-
-## Gradient Descent vs Closed-Form
-
-This implementation compares gradient descent to the closed-form normal equation.
-
-Observations:
-
-- Both methods converge to nearly identical parameters
-- Gradient descent requires careful tuning of learning rate and epochs
-- Closed-form solution is exact but computationally expensive for large feature sets
-
-This highlights why gradient descent is used for large-scale ML problems.
