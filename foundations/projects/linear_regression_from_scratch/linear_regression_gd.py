@@ -45,6 +45,11 @@ def add_bias_column(X: np.ndarray) -> np.ndarray:
 def mean_squared_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.mean((y_true - y_pred) ** 2))
 
+def normal_equation(X: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """ Closed-form solution for linear regression:
+    theta = (X^T X)^(-1) X^T y """
+    Xb = add_bias_column(X)
+    return np.linalg.inv(Xb.T @ Xb) @ Xb.T @ y
 
 def train_linear_regression_gd(
     X: np.ndarray,
@@ -103,6 +108,17 @@ def main() -> None:
     b = float(theta[0, 0])
     w = float(theta[1, 0])
 
+    # Closed-form solution
+    theta_ne = normal_equation(X, y)
+
+    y_hat_ne = predict(X, theta_ne)
+    mse_ne = mean_squared_error(y, y_hat_ne)
+
+    print("=== Closed-form Solution (Normal Equation)===")
+    print(f"Learned parameters: w={theta_ne[1,0]:.4f}, b={theta_ne[0,0]:.4f}")
+    print(f"Final MSE: {mse_ne:.4f}")
+    
+
     # 3) Report
     y_hat = predict(X, theta)
     mse = mean_squared_error(y, y_hat)
@@ -124,6 +140,18 @@ def main() -> None:
     plt.xlabel("x")
     plt.ylabel("y")
     plt.show()
+
+    y_hat_ne_sorted = y_hat_ne[order]
+    plt.figure()
+    plt.scatter(X_sorted, y_sorted, s=10)
+    plt.plot(X_sorted, y_hat_sorted, label="Gradient Descent")
+    plt.plot(X_sorted, y_hat_ne_sorted, linestyle="--", label="Normal Equation")
+    plt.legend()
+    plt.title("Linear Regression: GD vs Closed-form")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.show()
+    
 
     # 5) Plot training loss history (sampled)
     plt.figure()

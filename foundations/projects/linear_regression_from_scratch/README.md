@@ -46,3 +46,15 @@ Where:
 ```bash
 pip install -r requirements.txt
 ```
+
+## Gradient Descent vs Closed-Form
+
+This implementation compares gradient descent to the closed-form normal equation.
+
+Observations:
+
+- Both methods converge to nearly identical parameters
+- Gradient descent requires careful tuning of learning rate and epochs
+- Closed-form solution is exact but computationally expensive for large feature sets
+
+This highlights why gradient descent is used for large-scale ML problems.
