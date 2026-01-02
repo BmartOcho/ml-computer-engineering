@@ -29,66 +29,6 @@ def train_test_split(
     train_idx = idx[test_n:]
     return X[train_idx], X[test_idx], y[train_idx], y[test_idx]
 
-def make_synthetic_data(
-    n: int = 100,
-    d: int = 3,
-    noise_std: float = 250.0,
-    debug: bool = False,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
-    """
-    Create synthetic multi-feature linear data:
-    y = X @ w_true + b_true + noise
-
-    Returns:
-    X: shape (n, d)
-    y: shape (n, 1)
-    w_true: shape (d, 1)
-    b_true: float
-    """
-    X = np.random.uniform(-500, 500, size=(n, d)) # (n, d)
-    w_true = np.array([[6.0], [4.0], [3.0]]) # (d, 1) <-- for d=3
-    b_true = 10.0
-
-    noise = np.random.normal(0, noise_std, size=(n, 1))
-    y = X @ w_true + b_true + noise # (n, 1)
-
-    if debug:
-        signal = X @ w_true
-        print("signal std:", signal.std(), "noise std:", noise.std())
-
-    return X, y, w_true, b_true
-
-### 10 seeds experiment ###
-def run_seed_sweep(
-    seeds: list[int],
-    n: int = 1000,
-    d: int = 3,
-    noise_std: float = 250.0,
-    lr: float = 1e-2,
-    epochs: int = 5000,
-) -> None:
-    w_estimates = []
-    b_estimates = []
-
-    for seed in seeds:
-        set_seed(seed)
-
-        X, y, w_true, b_true = make_synthetic_data(n=n, d=d, noise_std=noise_std)
-        Xn, X_mean, X_std = normalize_features(X)
-
-        theta_gd, _ = train_linear_regression_gd(Xn, y, lr=lr, epochs=epochs)
-        theta_gd_raw = denormalize_theta(theta_gd, X_mean, X_std)
-
-        w_raw = theta_gd_raw[1:, 0]   # (d,)
-        b_raw = theta_gd_raw[0, 0]    # scalar
-
-        w_estimates.append(w_raw)
-        b_estimates.append(b_raw)
-
-    w_estimates = np.vstack(w_estimates)          # shape (num_seeds, d)
-    b_estimates = np.array(b_estimates)           # shape (num_seeds,)
-    
-
 def add_bias_column(X: np.ndarray) -> np.ndarray:
     ones = np.ones((X.shape[0], 1))
     return np.hstack([ones, X])
@@ -150,33 +90,6 @@ def least_squares_closed_form(X: np.ndarray, y: np.ndarray) -> np.ndarray:
     theta, *_ = np.linalg.lstsq(Xb, y, rcond=None)
     return theta
 
-
-def denormalize_theta(theta_norm: np.ndarray, X_mean: np.ndarray, X_std: np.ndarray) -> np.ndarray:
-    """
-    Convert parameters learned on normalized X back to raw-X units.
-
-    theta_norm: shape (d+1, 1) where:
-      theta_norm[0] = b_norm
-      theta_norm[1:] = w_norm (d, 1)
-
-    If Xn = (X - mean) / std and y = b_norm + w_norm^T Xn,
-    then in raw X units:
-      w_raw = w_norm / std
-      b_raw = b_norm - sum(w_norm * mean / std)
-    """
-    b_norm = theta_norm[0:1, :] #(1, 1)
-    w_norm = theta_norm[1:, :] #(d, 1)
-
-    mean = X_mean.reshape(-1, 1) # (d, 1)
-    std = X_std.reshape(-1, 1) # (d, 1)
-
-    w_raw = w_norm / std #(d, 1)
-    b_raw = b_norm - (w_norm.T @ (mean / std))  # shape (1,1)
-
-    b_raw_scalar = b_raw.item() # extract a real Python float
-    return np.vstack([[b_raw_scalar], w_raw]) # (d+1, 1)
-
-
 def main() -> None:
     LR = 1e-2
     EPOCHS = 5000
@@ -221,17 +134,23 @@ def main() -> None:
     rmse_test_cf = float(np.sqrt(mean_squared_error(y_test, yhat_test_cf)))
     print("RMSE test (closed-form):", rmse_test_cf)
     print("max |GD - CF| on test preds:", float(np.max(np.abs(yhat_test - yhat_test_cf))))
+    unique, counts = np.unique(y_test.astype(int), return_counts=True)
+    print("y_test distribution:", dict(zip(unique, counts)))
 
     # 7) Plot: predicted vs true on TEST
     plt.figure()
-    plt.scatter(y_test, yhat_test, s=18, alpha=0.7)
+    plt.scatter(y_test, yhat_test, s=18, alpha=0.7, label="Model")
+    plt.axhline(baseline, linestyle=":", linewidth=1, label="Baseline (mean)")
     minv = min(y_test.min(), yhat_test.min())
     maxv = max(y_test.max(), yhat_test.max())
     plt.plot([minv, maxv], [minv, maxv], linestyle="--", linewidth=1)
     plt.xlabel("y_test (true)")
     plt.ylabel("yhat_test (predicted)")
     plt.title("Wine Quality Red: Test Predicted vs True")
+    plt.legend()
     plt.show()
+    
+
 
     # 8) Plot: loss curve
     plt.figure()
