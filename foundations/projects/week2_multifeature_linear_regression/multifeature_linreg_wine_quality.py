@@ -3,6 +3,21 @@ from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
 
+FEATURE_NAMES = [
+    "fixed acidity",
+    "volatile acidity",
+    "citric acid",
+    "residual sugar",
+    "chlorides",
+    "free sulfur dioxide",
+    "total sulfur dioxide",
+    "density",
+    "pH",
+    "sulphates",
+    "alcohol",
+]
+
+
 
 def set_seed(seed: int = 42) -> None:
     np.random.seed(seed)
@@ -149,6 +164,12 @@ def run_one_dataset(name: str, path: str, lr: float, epochs: int, plot: bool = F
 
     unique_vals, counts = np.unique(y_test.astype(int), return_counts=True)
     dist = {int(u): int(c) for u, c in zip(unique_vals, counts)}
+
+    print("Top 5 |weights| (closed-form, normalized features):")
+    w = theta_cf[1:, 0]
+    top = np.argsort(np.abs(w))[::-1][:5]
+    for i in top:
+        print(f"  {i:2d} {FEATURE_NAMES[i]:<20} weight={w[i]: .4f}")
 
     print(f"\n=== Wine Quality ({name}) ===")
     print("RMSE baseline (predict mean):", rmse_baseline)
