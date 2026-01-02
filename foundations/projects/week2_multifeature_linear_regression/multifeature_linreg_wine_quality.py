@@ -44,6 +44,12 @@ def train_test_split(
     train_idx = idx[test_n:]
     return X[train_idx], X[test_idx], y[train_idx], y[test_idx]
 
+def r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    ss_res = float(np.sum((y_true - y_pred) ** 2))
+    ss_tot = float(np.sum((y_true - np.mean(y_true)) ** 2))
+    return 1.0 - ss_res / ss_tot
+
+
 
 def add_bias_column(X: np.ndarray) -> np.ndarray:
     ones = np.ones((X.shape[0], 1))
@@ -179,6 +185,8 @@ def run_one_dataset(name: str, path: str, lr: float, epochs: int, plot: bool = F
     print("max |GD - CF| on test preds:", max_pred_diff)
     print("max |theta_gd - theta_cf|:", max_theta_diff)
     print("y_test distribution:", dist)
+    print("R^2 test:", r2_score(y_test, yhat_test))
+
 
     # 7) Plots (optional)
     if plot:
